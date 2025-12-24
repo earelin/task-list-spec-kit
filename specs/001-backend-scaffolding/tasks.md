@@ -17,8 +17,8 @@
 
 - **Project type**: Multiproject Gradle with `app` subproject
 - **Root**: `backend/` at repository root
-- **Application code**: `backend/app/src/main/java/com/tasklist/`
-- **Test code**: `backend/app/src/test/java/com/tasklist/`
+- **Application code**: `backend/app/src/main/java/net/earelin/tasklist/`
+- **Test code**: `backend/app/src/test/java/net/earelin/tasklist/`
 - **Resources**: `backend/app/src/main/resources/`
 
 ## Reference Documents
@@ -40,11 +40,11 @@
 
 **Reference**: research.md §1 (Micronaut 4.10.6), §3 (Gradle 8.x Kotlin DSL)
 
-- [ ] T001 Create `backend/settings.gradle.kts` with Micronaut Platform catalog plugin (io.micronaut.platform.catalog:4.6.1) and app subproject include
-- [ ] T002 Create `backend/build.gradle.kts` root build file with allprojects Java 21 toolchain configuration
-- [ ] T003 Create `backend/gradle.properties` with Micronaut version (4.10.6) and project group
-- [ ] T004 [P] Initialize Gradle wrapper in `backend/` directory (gradle wrapper --gradle-version 8.12)
-- [ ] T005 Create `backend/app/build.gradle.kts` with Micronaut application plugin, dependencies: micronaut-http-server-netty, micronaut-management, micronaut-test-junit5, archunit-junit5:1.4.1, logstash-logback-encoder:9.0
+- [x] T001 Create `backend/settings.gradle.kts` with Micronaut Platform catalog plugin (io.micronaut.platform.catalog:4.6.1) and app subproject include
+- [x] T002 Create `backend/build.gradle.kts` root build file with allprojects Java 21 toolchain configuration
+- [x] T003 Create `backend/gradle.properties` with Micronaut version (4.10.6) and project group
+- [x] T004 [P] Initialize Gradle wrapper in `backend/` directory (gradle wrapper --gradle-version 8.12)
+- [x] T005 Create `backend/app/build.gradle.kts` with Micronaut application plugin, dependencies: micronaut-http-server-netty, micronaut-management, micronaut-test-junit5, archunit-junit5:1.4.1, logstash-logback-encoder:9.0
 
 **Checkpoint**: `./gradlew build` runs without errors (no source code yet)
 
@@ -58,12 +58,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create `backend/app/src/main/java/com/tasklist/Application.java` Micronaut entry point with @MicronautApplication annotation
-- [ ] T007 [P] Create package structure skeleton: `backend/app/src/main/java/com/tasklist/domain/` (empty .gitkeep)
-- [ ] T008 [P] Create package structure skeleton: `backend/app/src/main/java/com/tasklist/application/` (empty .gitkeep)
-- [ ] T009 [P] Create package structure skeleton: `backend/app/src/main/java/com/tasklist/infrastructure/web/` (empty .gitkeep)
-- [ ] T010 Create `backend/app/src/main/resources/application.yml` with server port 8080, application name, health endpoint configuration (enabled, not sensitive, details-visible: ANONYMOUS)
-- [ ] T011 Create `backend/app/src/main/resources/logback.xml` with LogstashEncoder for JSON structured logging to stdout per FR-010
+- [x] T006 Create `backend/app/src/main/java/net/earelin/tasklist/Application.java` Micronaut entry point with @MicronautApplication annotation
+- [x] T007 [P] Create package structure skeleton: `backend/app/src/main/java/net/earelin/tasklist/domain/` (empty .gitkeep)
+- [x] T008 [P] Create package structure skeleton: `backend/app/src/main/java/net/earelin/tasklist/application/` (empty .gitkeep)
+- [x] T009 [P] Create package structure skeleton: `backend/app/src/main/java/net/earelin/tasklist/infrastructure/web/` (empty .gitkeep)
+- [x] T010 Create `backend/app/src/main/resources/application.yml` with server port 8080, application name, health endpoint configuration (enabled, not sensitive, details-visible: ANONYMOUS)
+- [x] T011 Create `backend/app/src/main/resources/logback.xml` with LogstashEncoder for JSON structured logging to stdout per FR-010
 
 **Checkpoint**: `./gradlew :app:run` starts Micronaut application on port 8080
 
@@ -79,10 +79,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Create `backend/app/src/main/java/com/tasklist/infrastructure/web/HealthController.java` extending Micronaut's HealthEndpoint to add version and uptime fields per contracts/health-api.yaml response schema
-- [ ] T013 [US1] Create `backend/app/src/main/java/com/tasklist/infrastructure/config/HealthInfoProvider.java` singleton bean tracking application start time for uptime calculation (ISO 8601 duration format PT#H#M#S)
+- [ ] T012 [US1] Create `backend/app/src/main/java/net/earelin/tasklist/infrastructure/web/HealthController.java` extending Micronaut's HealthEndpoint to add version and uptime fields per contracts/health-api.yaml response schema
+- [ ] T013 [US1] Create `backend/app/src/main/java/net/earelin/tasklist/infrastructure/config/HealthInfoProvider.java` singleton bean tracking application start time for uptime calculation (ISO 8601 duration format PT#H#M#S)
 - [ ] T014 [US1] Update `backend/app/src/main/resources/application.yml` to set application version from gradle.properties (micronaut.application.version)
-- [ ] T015 [US1] Create `backend/app/src/test/java/com/tasklist/infrastructure/web/HealthControllerTest.java` with @MicronautTest verifying: GET /health returns 200, response contains status/version/uptime/timestamp fields, response time <100ms (SC-001)
+- [ ] T015 [US1] Create `backend/app/src/test/java/net/earelin/tasklist/infrastructure/web/HealthControllerTest.java` with @MicronautTest verifying: GET /health returns 200, response contains status/version/uptime/timestamp fields, response time <100ms (SC-001)
 
 **Checkpoint**: Health endpoint returns complete response per contracts/health-api.yaml. All acceptance scenarios for US1 pass.
 
@@ -98,9 +98,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Create `backend/app/src/test/java/com/tasklist/architecture/LayerDependencyTest.java` with ArchUnit layeredArchitecture() test: Domain layer (..domain..) may not access any layer, Application layer (..application..) may only access Domain, Infrastructure layer (..infrastructure..) may access Application and Domain
-- [ ] T017 [US2] Create `backend/app/src/test/java/com/tasklist/architecture/NamingConventionTest.java` with ArchUnit tests: Controllers end with "Controller", Services end with "Service", classes in domain package have no framework annotations
-- [ ] T018 [US2] Create `backend/app/src/test/java/com/tasklist/architecture/NoCyclicDependenciesTest.java` with ArchUnit slices().matching("com.tasklist.(*)..").should().beFreeOfCycles()
+- [ ] T016 [US2] Create `backend/app/src/test/java/net/earelin/tasklist/architecture/LayerDependencyTest.java` with ArchUnit layeredArchitecture() test: Domain layer (..domain..) may not access any layer, Application layer (..application..) may only access Domain, Infrastructure layer (..infrastructure..) may access Application and Domain
+- [ ] T017 [US2] Create `backend/app/src/test/java/net/earelin/tasklist/architecture/NamingConventionTest.java` with ArchUnit tests: Controllers end with "Controller", Services end with "Service", classes in domain package have no framework annotations
+- [ ] T018 [US2] Create `backend/app/src/test/java/net/earelin/tasklist/architecture/NoCyclicDependenciesTest.java` with ArchUnit slices().matching("net.earelin.tasklist.(*)..").should().beFreeOfCycles()
 
 **Checkpoint**: All ArchUnit tests pass. Layer violations cause build failure (FR-008). Acceptance scenarios for US2 pass.
 

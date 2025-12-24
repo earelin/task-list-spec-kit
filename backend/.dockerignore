@@ -1,0 +1,36 @@
+# Git
+.git/
+.gitignore
+
+# Gradle build cache (not needed in container)
+.gradle/
+build/
+!app/build/libs/*.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Documentation
+*.md
+docs/
+
+# Specs
+specs/
+
+# CI/CD
+.github/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Test files
+**/test/
+**/tests/
