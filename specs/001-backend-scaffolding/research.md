@@ -223,10 +223,10 @@ rule mapping than generic SARIF import. Issues appear with proper CheckStyle rul
 **Action Versions**:
 | Action | Version | Purpose |
 |--------|---------|---------|
-| actions/checkout | v5 | Code checkout |
+| actions/checkout | v6 | Code checkout |
 | actions/setup-java | v5 | Java 21 + Gradle cache |
 | gradle/actions/setup-gradle | v5 | Advanced Gradle caching |
-| gradle/wrapper-validation-action | v3 | Security validation |
+| gradle/wrapper-validation-action | v4 | Security validation |
 | github/codeql-action/upload-sarif | v4 | SARIF upload |
 
 ### 11. Testing: JUnit 5 with Micronaut Test

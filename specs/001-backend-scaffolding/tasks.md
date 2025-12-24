@@ -138,7 +138,7 @@
 
 - [ ] T024 [US4] Create `backend/Dockerfile` with eclipse-temurin:21-jre-alpine base, ADD OpenTelemetry Java Agent from GitHub releases, COPY app jar, ENTRYPOINT with -javaagent flag per plan.md §1.1
 - [ ] T025 [US4] Create `backend/.github/workflows/ci.yml` with: trigger on pull_request to trunk, jobs for build/test/checkstyle/sonar
-- [ ] T026 [US4] Configure CI workflow job: checkout (actions/checkout@v5), setup-java (actions/setup-java@v5 with java 21 temurin), gradle wrapper validation (gradle/wrapper-validation-action@v3)
+- [ ] T026 [US4] Configure CI workflow job: checkout (actions/checkout@v6), setup-java (actions/setup-java@v5 with java 21 temurin), gradle wrapper validation (gradle/wrapper-validation-action@v4)
 - [ ] T027 [US4] Configure CI workflow build step: gradle/actions/setup-gradle@v5, run `./gradlew build check` with Gradle caching enabled
 - [ ] T028 [US4] Configure CI workflow SonarQube step: run `./gradlew sonar` with SONAR_TOKEN secret, conditional on secrets.SONAR_TOKEN being available
 - [ ] T029 [US4] Add Dockerfile linting step to CI using hadolint/hadolint-action@v3.1.0
