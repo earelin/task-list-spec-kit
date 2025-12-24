@@ -3,6 +3,9 @@ FROM eclipse-temurin:21-jre-alpine
 LABEL maintainer="earelin"
 LABEL description="Task List Backend Service"
 
+# Set shell to ash with pipefail for safe piping in RUN commands
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
