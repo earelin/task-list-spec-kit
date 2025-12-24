@@ -44,7 +44,7 @@
 - [x] T002 Create `backend/build.gradle.kts` root build file with allprojects Java 21 toolchain configuration
 - [x] T003 Create `backend/gradle.properties` with Micronaut version (4.10.6) and project group
 - [x] T004 [P] Initialize Gradle wrapper in `backend/` directory (gradle wrapper --gradle-version 8.12)
-- [x] T005 Create `backend/app/build.gradle.kts` with Micronaut application plugin, dependencies: micronaut-http-server-netty, micronaut-management, micronaut-test-junit5, archunit-junit5:1.4.1, logstash-logback-encoder:9.0
+- [x] T005 Create `backend/app/build.gradle.kts` with Micronaut application plugin, dependencies: micronaut-http-server-jetty, micronaut-management, micronaut-test-junit5, archunit-junit5:1.4.1, logstash-logback-encoder:9.0
 
 **Checkpoint**: `./gradlew build` runs without errors (no source code yet)
 

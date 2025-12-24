@@ -9,9 +9,12 @@ RUN addgroup -g 1001 -S appgroup && \
 
 WORKDIR /app
 
-# Download OpenTelemetry Java Agent
+# Download and verify OpenTelemetry Java Agent
 ARG OTEL_VERSION=2.13.0
-ADD --chmod=644 https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_VERSION}/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+ARG OTEL_SHA256=0af6e63e8e10fc8efa3e26daebbf7a78ad25c8c35f2e80f3abe2de82fd35fa4e
+ADD --chmod=644 https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_VERSION}/opentelemetry-javaagent.jar /tmp/opentelemetry-javaagent.jar
+RUN echo "${OTEL_SHA256}  /tmp/opentelemetry-javaagent.jar" | sha256sum -c - && \
+    mv /tmp/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
 
 # Copy application jar
 COPY --chown=appuser:appgroup app/build/libs/app-*-all.jar /app/application.jar
