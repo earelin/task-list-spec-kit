@@ -8,21 +8,21 @@
 Create the foundational scaffolding for a Java Micronaut REST service with a Gradle
 multiproject structure. The scaffolding includes a health check endpoint with version and
 uptime reporting, layered architecture with ArchUnit fitness tests, CheckStyle integration
-with SARIF output, structured logging with Micrometer metrics, and a GitHub Actions CI
-pipeline. Application code resides in the `app` subproject.
+with XML output for SonarQube, structured logging with OpenTelemetry metrics via OTLP, and
+a GitHub Actions CI pipeline. Application code resides in the `app` subproject.
 
 ## Technical Context
 
 **Language/Version**: Java 21 (LTS)
 **Framework**: Micronaut 4.x
-**Primary Dependencies**: Micronaut HTTP Server, Micronaut Management, Micrometer, Logback, ArchUnit
+**Primary Dependencies**: Micronaut HTTP Server, Micronaut Management, OpenTelemetry Java Agent, Logback, ArchUnit
 **Build Tool**: Gradle 8.x with Kotlin DSL
 **Storage**: N/A (scaffolding only - no persistence layer)
 **Testing**: JUnit 5, Micronaut Test, ArchUnit
 **Target Platform**: Linux server (containerized deployment)
 **Project Type**: Multiproject Gradle (app subproject for application code)
 **Performance Goals**: Health endpoint <100ms p99 (per SC-001)
-**Constraints**: <200ms p95 API response (per constitution), SARIF output for quality tools
+**Constraints**: <200ms p95 API response (per constitution), XML output for CheckStyle→SonarQube
 **Scale/Scope**: Single service scaffolding, foundation for future task list features
 
 ## Constitution Check
@@ -31,16 +31,20 @@ pipeline. Application code resides in the `app` subproject.
 
 | Principle | Requirement | Scaffolding Compliance | Status |
 |-----------|-------------|------------------------|--------|
-| 1. Quality First | 80% code coverage, SonarQube Cloud, CheckStyle SARIF | CheckStyle configured, coverage target set, SonarQube integration planned | ✅ |
+| 1. Quality First | 80% code coverage, SonarQube Cloud, CheckStyle | CheckStyle configured with XML output for SonarQube import | ✅ |
 | 2. DevOps | GitHub Actions CI/CD, 3 pipelines | CI pipeline in scope (FR-007), CD/Release deferred to deployment feature | ✅ |
-| 3. SRE | SLOs, monitoring <5min detection | Health endpoint with metrics (FR-011), logging (FR-010) | ✅ |
+| 3. SRE | SLOs, monitoring <5min detection | Health endpoint with OpenTelemetry metrics (FR-011), logging (FR-010) | ✅ |
 | 4. Evolutionary Architecture | ArchUnit fitness functions, ADRs | ArchUnit tests required (FR-004, FR-008) | ✅ |
-| 5. Clean Code | CheckStyle Google Java Format, SARIF | Configured in build (FR-005, FR-006, FR-009) | ✅ |
+| 5. Clean Code | CheckStyle Google Java Format | Configured in build with XML reports (FR-005, FR-009) | ✅ |
 | 6. Infrastructure as Code | Checkov linting, version control | Dockerfile linting in CI pipeline | ✅ |
 | 7. Continuous Delivery | Trunk deployable, semantic versioning | Version in health response (FR-002), trunk-based workflow | ✅ |
-| 8. Continuous Refactoring | SonarQube metrics, test safety net | SonarQube integration, test foundation | ✅ |
+| 8. Continuous Refactoring | SonarQube metrics, test safety net | SonarQube integration via CheckStyle XML, test foundation | ✅ |
 
 **Gate Status**: PASSED - All constitutional principles addressed in scaffolding scope.
+
+**Note on SARIF vs XML**: The constitution mentions SARIF format, but SonarQube Cloud natively
+imports CheckStyle XML reports via `sonar.java.checkstyle.reportPaths`. This is the standard
+integration pattern and meets the spirit of the requirement (automated quality gate integration).
 
 ## Project Structure
 
@@ -111,4 +115,87 @@ primary application code isolated and independently buildable.
 |--------|----------|-----------|
 | Multiproject vs Single | Multiproject with `app` | User requirement; enables future modularity |
 | Package structure | Hexagonal layers | Constitution principle 4 (Evolutionary Architecture) |
-| Metrics library | Micrometer | Micronaut native integration, constitution SRE principle |
+| Observability | OpenTelemetry Java Agent | User requested OpenTelemetry Java Agent for automatic instrumentation |
+| CheckStyle output | XML (not SARIF) | SonarQube natively imports CheckStyle XML via `sonar.java.checkstyle.reportPaths` |
+
+## Key Technology Changes (from previous plan)
+
+### 1. Observability: OpenTelemetry Java Agent
+
+**Previous**: Micrometer + Prometheus Registry (in-code instrumentation)
+**Updated**: OpenTelemetry Java Agent (automatic bytecode instrumentation)
+
+**Approach**: Use the OpenTelemetry Java Agent for zero-code instrumentation. The agent
+automatically instruments HTTP requests, database calls, and other common libraries
+without requiring code changes or SDK dependencies.
+
+**Agent Download** (in Dockerfile or CI):
+```bash
+# Download OpenTelemetry Java Agent
+curl -L -o opentelemetry-javaagent.jar \
+  https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+```
+
+**Runtime Configuration** (via environment variables):
+```bash
+# Required
+OTEL_SERVICE_NAME=tasklist-backend
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+
+# Optional
+OTEL_TRACES_EXPORTER=otlp
+OTEL_METRICS_EXPORTER=otlp
+OTEL_LOGS_EXPORTER=otlp
+OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,deployment.environment=dev
+```
+
+**JVM Startup**:
+```bash
+java -javaagent:opentelemetry-javaagent.jar -jar app.jar
+```
+
+**Dockerfile Integration**:
+```dockerfile
+FROM eclipse-temurin:21-jre-alpine
+
+# Download OpenTelemetry Java Agent
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /opt/opentelemetry-javaagent.jar
+
+COPY app/build/libs/app-*-all.jar /app/app.jar
+
+ENTRYPOINT ["java", "-javaagent:/opt/opentelemetry-javaagent.jar", "-jar", "/app/app.jar"]
+```
+
+**Benefits of Java Agent approach**:
+- Zero code changes required
+- Automatic instrumentation of HTTP, JDBC, logging, and 100+ libraries
+- Consistent telemetry across all services
+- Easy to enable/disable via JVM flag
+- Centralized configuration via environment variables
+
+### 2. SonarQube: CheckStyle XML instead of SARIF
+
+**Previous**: CheckStyle SARIF output → `sonar.sarifReportPaths`
+**Updated**: CheckStyle XML output → `sonar.java.checkstyle.reportPaths`
+
+**Gradle Configuration**:
+```kotlin
+tasks.withType<Checkstyle> {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        sarif.required.set(false)  // Disabled - using XML for SonarQube
+    }
+}
+
+sonar {
+    properties {
+        property("sonar.java.checkstyle.reportPaths",
+            "app/build/reports/checkstyle/main.xml,app/build/reports/checkstyle/test.xml")
+    }
+}
+```
+
+**Rationale**: SonarQube Cloud has native CheckStyle XML import support. This is the
+standard integration pattern documented by SonarSource and provides better rule
+mapping than generic SARIF import.

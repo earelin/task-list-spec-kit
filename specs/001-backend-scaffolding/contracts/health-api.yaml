@@ -1,0 +1,231 @@
+openapi: 3.1.0
+info:
+  title: Task List Backend - Health API
+  description: |
+    Health check and metrics endpoints for the Task List backend service.
+    These endpoints are used for monitoring, load balancer health checks,
+    and operational observability.
+  version: 1.0.0
+  contact:
+    name: Task List Team
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Get service health status
+      description: |
+        Returns the overall health status of the service including version,
+        uptime, and detailed health indicator information.
+
+        This endpoint is unauthenticated and intended for load balancer
+        health checks and monitoring systems.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy (status UP or STARTING)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              examples:
+                healthy:
+                  summary: Healthy service
+                  value:
+                    status: UP
+                    version: "1.0.0"
+                    uptime: "PT2H15M30S"
+                    timestamp: "2025-12-24T10:30:00Z"
+                    details:
+                      diskSpace:
+                        status: UP
+                        total: 107374182400
+                        free: 53687091200
+                starting:
+                  summary: Service starting
+                  value:
+                    status: STARTING
+                    version: "1.0.0"
+                    uptime: "PT0S"
+                    timestamp: "2025-12-24T10:30:00Z"
+        '503':
+          description: Service is unhealthy (status DOWN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              examples:
+                unhealthy:
+                  summary: Unhealthy service
+                  value:
+                    status: DOWN
+                    version: "1.0.0"
+                    uptime: "PT2H15M30S"
+                    timestamp: "2025-12-24T10:30:00Z"
+                    details:
+                      diskSpace:
+                        status: DOWN
+                        error: "Disk space below threshold"
+
+  /health/liveness:
+    get:
+      operationId: getLiveness
+      summary: Get liveness probe status
+      description: |
+        Returns liveness status indicating if the application is running.
+        Used by container orchestrators (Kubernetes) to determine if the
+        container should be restarted.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Application is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleHealthStatus'
+        '503':
+          description: Application is not alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleHealthStatus'
+
+  /health/readiness:
+    get:
+      operationId: getReadiness
+      summary: Get readiness probe status
+      description: |
+        Returns readiness status indicating if the application is ready
+        to receive traffic. Used by load balancers and container orchestrators.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Application is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleHealthStatus'
+        '503':
+          description: Application is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleHealthStatus'
+
+  /prometheus:
+    get:
+      operationId: getMetrics
+      summary: Get Prometheus metrics
+      description: |
+        Returns application metrics in Prometheus text format.
+        Includes HTTP request metrics (count, latency histograms),
+        JVM metrics, and custom application metrics.
+      tags:
+        - Metrics
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                metrics:
+                  summary: Sample metrics output
+                  value: |
+                    # HELP http_server_requests_seconds
+                    # TYPE http_server_requests_seconds histogram
+                    http_server_requests_seconds_bucket{method="GET",uri="/health",status="200",le="0.1"} 150
+                    http_server_requests_seconds_bucket{method="GET",uri="/health",status="200",le="0.2"} 180
+                    http_server_requests_seconds_count{method="GET",uri="/health",status="200"} 200
+                    http_server_requests_seconds_sum{method="GET",uri="/health",status="200"} 5.5
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - version
+        - uptime
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+            - STARTING
+          description: Overall health status of the service
+          example: UP
+        version:
+          type: string
+          description: Application version (semantic versioning)
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+.*$'
+          example: "1.0.0"
+        uptime:
+          type: string
+          description: ISO 8601 duration since service start
+          pattern: '^PT.*$'
+          example: "PT2H15M30S"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of health check
+          example: "2025-12-24T10:30:00Z"
+        details:
+          type: object
+          description: Detailed health indicator information
+          additionalProperties:
+            $ref: '#/components/schemas/HealthIndicator'
+
+    SimpleHealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          description: Simple health status
+          example: UP
+
+    HealthIndicator:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+            - UNKNOWN
+          description: Health indicator status
+          example: UP
+        total:
+          type: integer
+          format: int64
+          description: Total capacity (for resource indicators)
+        free:
+          type: integer
+          format: int64
+          description: Free capacity (for resource indicators)
+        error:
+          type: string
+          description: Error message when status is DOWN
+
+tags:
+  - name: Health
+    description: Health check endpoints for monitoring and load balancing
+  - name: Metrics
+    description: Prometheus metrics for observability
