@@ -1,25 +1,23 @@
 <!--
 Sync Impact Report:
-- Version change: N/A -> v1.0.0 (initial constitution adoption)
-- Modified principles: N/A (initial creation)
+- Version change: v1.0.0 -> v1.1.0 (new documentation standard added)
+- Modified principles: None
 - Added sections:
-  - 8 Engineering Principles: Quality First, DevOps, SRE, Evolutionary Architecture,
-    Clean Code, Infrastructure as Code, Continuous Delivery, Continuous Refactoring
-  - Technical Standards (toolchain, CI/CD, project management, environment strategy)
-  - Governance (amendment process, version management, compliance review, enforcement)
-- Removed sections: Template placeholders replaced with concrete content
+  - Technical Standards > Documentation Standards (new subsection)
+    - Mermaid MUST be used for all diagrams in Markdown files
+- Removed sections: None
 - Templates requiring updates:
-  - .specify/templates/plan-template.md: No update needed (Constitution Check section is generic)
-  - .specify/templates/spec-template.md: No update needed (compatible with quality principles)
-  - .specify/templates/tasks-template.md: No update needed (phase structure aligns with CD)
+  - .specify/templates/plan-template.md: ✅ No update needed (already uses Mermaid-compatible structure)
+  - .specify/templates/spec-template.md: ✅ No update needed (text-based, diagrams optional)
+  - .specify/templates/tasks-template.md: ✅ No update needed (text-based, no diagrams)
 - Follow-up TODOs: None
 -->
 
 # Task List Engineering Constitution
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Ratification Date**: 2025-12-24
-**Last Amended Date**: 2025-12-24
+**Last Amended Date**: 2025-12-25
 
 This constitution defines the fundamental engineering principles, practices, and governance
 framework for the Task List project. It establishes non-negotiable standards that guide all
@@ -223,6 +221,20 @@ graph TD
 ```
 
 ## Technical Standards
+
+### Documentation Standards
+
+**Diagram Format:**
+- Mermaid MUST be used for all diagrams in Markdown files
+- Diagrams MUST be embedded as fenced code blocks with the `mermaid` language identifier
+- External image files for diagrams (PNG, SVG, etc.) MUST NOT be used when Mermaid can
+  represent the same information
+- Complex diagrams that cannot be represented in Mermaid MAY use external tools, but MUST
+  include the source file alongside the rendered image
+
+**Rationale**: Mermaid diagrams are version-controlled as text, render natively in GitHub,
+and can be updated without external tooling. This ensures diagrams stay synchronized with
+documentation and are accessible to all contributors.
 
 ### Quality Assurance Toolchain
 
