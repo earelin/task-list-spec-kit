@@ -74,8 +74,6 @@ jobs:
     name: Build and Publish Docker Image
     runs-on: ubuntu-latest
     needs: [validate-release, security-validation]
-    environment: production
-    if: ${{ hashFiles('frontend/Dockerfile') != '' }}
 
     steps:
       - name: Checkout repository
@@ -110,15 +108,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # Production deployment placeholder
-      # - name: Deploy to Production
-      #   run: |
-      #     # Add production deployment commands here
-      #     echo "Deploying version ${{ github.event.release.tag_name }} to production..."
-
-      # Rollback verification placeholder
-      # - name: Verify Rollback Capability
-      #   run: |
-      #     # Add rollback verification commands here
-      #     echo "Verifying rollback capability..."

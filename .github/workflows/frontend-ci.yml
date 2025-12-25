@@ -58,7 +58,6 @@ jobs:
   lint-dockerfile:
     name: Lint Dockerfile
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('frontend/Dockerfile') != '' }}
 
     steps:
       - name: Checkout repository
