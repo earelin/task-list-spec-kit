@@ -1,0 +1,119 @@
+name: Frontend CD
+
+on:
+  push:
+    branches: [trunk]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-cd.yml"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Development
+    runs-on: ubuntu-latest
+    environment: development
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting with JSON output
+        run: npm run lint:json || true
+
+      - name: Run type check
+        run: npx tsc --noEmit
+
+      - name: Run unit tests with coverage
+        run: npm run test -- --coverage --passWithNoTests
+
+      - name: Build application
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/.next/
+          retention-days: 7
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Snyk vulnerability scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=frontend/package.json --severity-threshold=high
+
+      - name: Upload Snyk results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+        continue-on-error: true
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: ${{ hashFiles('frontend/Dockerfile') != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: false
+          tags: task-list-frontend:dev-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Deploy step placeholder - implement based on your infrastructure
+      # - name: Deploy to Development
+      #   run: |
+      #     # Add deployment commands here
+      #     echo "Deploying to development environment..."
